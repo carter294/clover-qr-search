@@ -1,20 +1,16 @@
-from cmath import nan
-import threading
-from typing import Counter
 import rospy
+import numpy as np
+import cv2
+from tf import TransformListener
+from threading import Lock
 from pyzbar import pyzbar
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from clover import srv
 from std_srvs.srv import Trigger
-import math
 from clover.srv import SetLEDEffect
-import numpy as np
-import cv2
-import tf
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import CameraInfo
-from mavros_msgs.srv import CommandBool
 
 rospy.init_node('flight')
 
@@ -27,7 +23,7 @@ set_attitude = rospy.ServiceProxy('set_attitude', srv.SetAttitude)
 set_rates = rospy.ServiceProxy('set_rates', srv.SetRates)
 land = rospy.ServiceProxy('land', Trigger)
 set_effect = rospy.ServiceProxy('led/set_effect', SetLEDEffect)
-arming = rospy.ServiceProxy('mavros/cmd/arming', CommandBool)
+
 bridge = CvBridge()
 
 msg = rospy.wait_for_message('/main_camera/camera_info', CameraInfo)
@@ -35,18 +31,18 @@ dC = np.array(msg.D, dtype='float64')
 cM = np.reshape(np.array(msg.K, dtype='float64'), (3, 3))
 
 qr = input()
-target_qr = dict(x=nan, y=nan, counter=0, found=False)
+target_qr = dict(x=None, y=None, counter=0, found=False)
 steps = 10
-qrs_lock = threading.Lock()
+qrs_lock = Lock()
 qr_size = 0.23
 objPoint = np.array([(-qr_size/2, -qr_size/2, 0), (-qr_size/2, qr_size/2, 0), (qr_size/2, qr_size/2, 0), (qr_size/2, -qr_size/2, 0)])
-listener = tf.TransformListener()
+listener = TransformListener()
 
 def navigate_wait(x=0, y=0, z=0, speed=0.5, frame_id='', auto_arm=False, tolerance=0.2):
     navigate(x=x, y=y, z=z, speed=speed, frame_id=frame_id, auto_arm=auto_arm)
     while not rospy.is_shutdown():
         telem = get_telemetry(frame_id='navigate_target')
-        if math.sqrt(telem.x ** 2 + telem.y ** 2 + telem.z ** 2) < tolerance:
+        if telem.x ** 2 + telem.y ** 2 + telem.z ** 2 < tolerance**2:
             break
         rospy.sleep(0.2)
 
@@ -76,7 +72,7 @@ def navigate_search(x=0, y=0, z=0, speed=0.5, frame_id='', auto_arm=False, toler
                 set_effect(r=0, g=0, b=0, effect='fill')
                 navigate(x=x, y=y, z=z, speed=speed, frame_id=frame_id, auto_arm=auto_arm)
                 telem = get_telemetry(frame_id='navigate_target')
-                if math.sqrt(telem.x ** 2 + telem.y ** 2 + telem.z ** 2) < tolerance:
+                if telem.x ** 2 + telem.y ** 2 + telem.z ** 2 < tolerance**2:
                     break
         rospy.sleep(0.2)
 
