@@ -85,7 +85,7 @@ def image_callback(data):
             continue
         with qrs_lock:
             if target_qr['counter'] >= steps:
-                    continue
+                continue
 
         _, _, tvec = cv2.solvePnP(objPoint, np.array(barcode.polygon, dtype='float64'), cM, dC)
 
