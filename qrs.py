@@ -5,12 +5,11 @@ from tf import TransformListener
 from threading import Lock
 from pyzbar import pyzbar
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CameraInfo
 from clover import srv
 from std_srvs.srv import Trigger
 from clover.srv import SetLEDEffect
 from geometry_msgs.msg import PoseStamped
-from sensor_msgs.msg import CameraInfo
 
 rospy.init_node('flight')
 
