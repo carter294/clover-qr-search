@@ -7,4 +7,4 @@ Also it's desirable to create a new image topic for throttling frames of a main 
 
 In the bottom of the script you can change the path your drone follows searching qr codes.
 
-After launching the script you'll have to input data, which is encrypted in qr code you want to find.
+After launching the script you'll have to input data, which is encoded in qr code you want to find.
